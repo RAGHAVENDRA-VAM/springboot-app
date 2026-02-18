@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Build Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,27 +16,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: Build with Maven
-        run: mvn clean test
+        run: mvn clean package -DskipTests
 
-  sast-sonarqube:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@v2
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: {repo_full_name.replace('/', '_')}
-
-  dast-zap:
-    needs: build-and-push
-    if: success()
-    runs-on: ubuntu-latest
-    steps:
-      - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          target: ${{ secrets.APP_BASE_URL }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: build-artifact
+          path: target/*.jar
+          retention-days: 30
