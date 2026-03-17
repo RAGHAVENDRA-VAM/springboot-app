@@ -1,4 +1,4 @@
-name: CI Build Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -15,12 +15,34 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Build with Maven
-        run: cd demo && mvn clean package -DskipTests
-
+      - name: Build
+          run: cd demo && mvn clean package -DskipTests
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: demo/target/*.jar
-          retention-days: 30
+          retention-days: 7
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: DevopAgent-1235678
+          package: .
