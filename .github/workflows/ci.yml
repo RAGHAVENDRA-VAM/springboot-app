@@ -34,11 +34,11 @@ jobs:
       with:
         name: build-artifact
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
-        app-name: Spring-boot-app12567
+        app-name: my-app
         package: .
